@@ -18,9 +18,9 @@ plugins {
 
 spotubePlugin {
     name = "YouTube Music"
-    version = "0.1.0"
+    version = "0.1.1"
     apiVersion = "0.0.1"
-    description = "YouTube Music plugin for Spotube metadata fetching"
+    description = "Plugin for YouTube Music metadata fetching"
     author = "Piper Plumber"
     capabilities = listOf(
         PluginCapability.PERSISTENT_STORAGE,
