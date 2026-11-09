@@ -251,45 +251,52 @@ class RealMetadataArtistAPI(private val youTube: YouTube) : MetadataArtistAPI {
     }
 
     override suspend fun isSavedArtists(ids: List<String>): List<Boolean> {
-        val libraryPage = youTube.library("FEmusic_library_corpus_track_artists").getOrThrow()
-        val savedIds = libraryPage.items
-            .filterIsInstance<ArtistItem>()
-            .map { it.id }
-            .toSet()
-
-        val allSavedIds = savedIds.toMutableSet()
-        var continuation = libraryPage.continuation
-        val seenContinuations = mutableSetOf<String>()
-
-        while (continuation != null && continuation !in seenContinuations && seenContinuations.size < 20) {
-            seenContinuations.add(continuation)
-            val continuationPage = youTube.libraryContinuation(continuation).getOrThrow()
-            val newIds = continuationPage.items
+        val allSavedIds = runCatching {
+            val libraryPage = youTube.library("FEmusic_library_corpus_track_artists").getOrThrow()
+            val savedIds = libraryPage.items
                 .filterIsInstance<ArtistItem>()
                 .map { it.id }
-            allSavedIds.addAll(newIds)
-            continuation = continuationPage.continuation
-        }
+                .toSet()
+
+            val set = savedIds.toMutableSet()
+            var continuation = libraryPage.continuation
+            val seenContinuations = mutableSetOf<String>()
+
+            while (continuation != null && continuation !in seenContinuations && seenContinuations.size < 20) {
+                seenContinuations.add(continuation)
+                val continuationPage = youTube.libraryContinuation(continuation).getOrThrow()
+                val newIds = continuationPage.items
+                    .filterIsInstance<ArtistItem>()
+                    .map { it.id }
+                set.addAll(newIds)
+                continuation = continuationPage.continuation
+            }
+            set
+        }.getOrElse { return ids.map { false } }
 
         return ids.map { it in allSavedIds }
     }
 
     override suspend fun saveArtists(ids: List<String>) {
         ids.forEach { id ->
-            val artistPage = youTube.artist(id).getOrThrow()
-            val channelId = artistPage.artist.channelId
-            if (channelId != null) {
-                youTube.subscribeChannel(channelId, subscribe = true).getOrThrow()
+            runCatching {
+                val artistPage = youTube.artist(id).getOrThrow()
+                val channelId = artistPage.artist.channelId
+                if (channelId != null) {
+                    youTube.subscribeChannel(channelId, subscribe = true).getOrThrow()
+                }
             }
         }
     }
 
     override suspend fun removeSavedArtists(ids: List<String>) {
         ids.forEach { id ->
-            val artistPage = youTube.artist(id).getOrThrow()
-            val channelId = artistPage.artist.channelId
-            if (channelId != null) {
-                youTube.subscribeChannel(channelId, subscribe = false).getOrThrow()
+            runCatching {
+                val artistPage = youTube.artist(id).getOrThrow()
+                val channelId = artistPage.artist.channelId
+                if (channelId != null) {
+                    youTube.subscribeChannel(channelId, subscribe = false).getOrThrow()
+                }
             }
         }
     }

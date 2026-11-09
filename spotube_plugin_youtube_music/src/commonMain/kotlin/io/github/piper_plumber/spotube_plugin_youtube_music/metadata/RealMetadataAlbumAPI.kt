@@ -166,37 +166,44 @@ class RealMetadataAlbumAPI(private val youTube: YouTube) : MetadataAlbumAPI {
     }
 
     override suspend fun isSavedAlbums(ids: List<String>): List<Boolean> {
-        val libraryPage = youTube.library("FEmusic_liked_albums").getOrThrow()
-        val savedIds = libraryPage.items
-            .filterIsInstance<AlbumItem>()
-            .map { it.browseId }
-            .toMutableSet()
+        val savedIds = runCatching {
+            val libraryPage = youTube.library("FEmusic_liked_albums").getOrThrow()
+            val set = libraryPage.items
+                .filterIsInstance<AlbumItem>()
+                .map { it.browseId }
+                .toMutableSet()
 
-        var continuation = libraryPage.continuation
-        var requestCount = 0
-        while (continuation != null && requestCount < 10) {
-            val nextPage = youTube.libraryContinuation(continuation).getOrThrow()
-            nextPage.items.filterIsInstance<AlbumItem>().forEach { savedIds.add(it.browseId) }
-            continuation = nextPage.continuation
-            requestCount++
-        }
+            var continuation = libraryPage.continuation
+            var requestCount = 0
+            while (continuation != null && requestCount < 10) {
+                val nextPage = youTube.libraryContinuation(continuation).getOrThrow()
+                nextPage.items.filterIsInstance<AlbumItem>().forEach { set.add(it.browseId) }
+                continuation = nextPage.continuation
+                requestCount++
+            }
+            set
+        }.getOrElse { return ids.map { false } }
 
         return ids.map { it in savedIds }
     }
 
     override suspend fun saveAlbums(ids: List<String>) {
         ids.forEach { id ->
-            val albumPage = youTube.album(id).getOrThrow()
-            val playlistId = albumPage.album.playlistId
-            youTube.likePlaylist(playlistId, true).getOrThrow()
+            runCatching {
+                val albumPage = youTube.album(id).getOrThrow()
+                val playlistId = albumPage.album.playlistId
+                youTube.likePlaylist(playlistId, true).getOrThrow()
+            }
         }
     }
 
     override suspend fun removeSavedAlbums(ids: List<String>) {
         ids.forEach { id ->
-            val albumPage = youTube.album(id).getOrThrow()
-            val playlistId = albumPage.album.playlistId
-            youTube.likePlaylist(playlistId, false).getOrThrow()
+            runCatching {
+                val albumPage = youTube.album(id).getOrThrow()
+                val playlistId = albumPage.album.playlistId
+                youTube.likePlaylist(playlistId, false).getOrThrow()
+            }
         }
     }
 }

@@ -186,14 +186,14 @@ class RealMetadataTrackAPI(val youTube: YouTube) : MetadataTrackAPI {
 
     override suspend fun saveTracks(ids: List<String>) {
         ids.forEach { id ->
-            youTube.addSongToLibrary(id).getOrThrow()
+            runCatching { youTube.likeVideo(id, true).getOrThrow() }
         }
         likedMutex.withLock { likedSongs = null }
     }
 
     override suspend fun removeSavedTracks(ids: List<String>) {
         ids.forEach { id ->
-            youTube.removeSongFromLibrary(id).getOrThrow()
+            runCatching { youTube.likeVideo(id, false).getOrThrow() }
         }
         likedMutex.withLock { likedSongs = null }
     }

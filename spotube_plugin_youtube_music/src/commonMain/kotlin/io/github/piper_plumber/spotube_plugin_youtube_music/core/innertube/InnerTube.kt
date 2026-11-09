@@ -76,13 +76,16 @@ class InnerTube(
     }
 
     private suspend fun authorizationHeader(): String? {
-        if ("SAPISID" !in cookieMap) {
+        val sapisid = cookieMap["SAPISID"]
+            ?: cookieMap["__Secure-3PAPISID"]
+            ?: cookieMap["__Secure-1PAPISID"]
+        if (sapisid == null) {
             logger.i { "[sapisidHash] SAPISID not found in cookie" }
             return null
         }
         val currentTime = Clock.System.now().toEpochMilliseconds() / 1000
         val hash =
-            sha1("$currentTime ${cookieMap["SAPISID"]} ${YouTubeClient.ORIGIN_YOUTUBE_MUSIC}")
+            sha1("$currentTime $sapisid ${YouTubeClient.ORIGIN_YOUTUBE_MUSIC}")
         return "SAPISIDHASH ${currentTime}_$hash"
     }
 

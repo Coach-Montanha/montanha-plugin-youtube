@@ -108,36 +108,39 @@ class RealMetadataPlaylistAPI(val youTube: YouTube) : MetadataPlaylistAPI {
     }
 
     override suspend fun isSavedPlaylists(ids: List<String>): List<Boolean> {
-        val savedIds = mutableSetOf<String>()
-        val libraryPage = youTube.library("FEmusic_liked_playlists").getOrThrow()
+        val savedIds = runCatching {
+            val set = mutableSetOf<String>()
+            val libraryPage = youTube.library("FEmusic_liked_playlists").getOrThrow()
 
-        libraryPage.items
-            .filterIsInstance<io.github.piper_plumber.spotube_plugin_youtube_music.core.innertube.models.PlaylistItem>()
-            .forEach { savedIds.add(it.id) }
-
-        var continuation = libraryPage.continuation
-        var requestCount = 0
-        while (continuation != null && requestCount < 10) {
-            val nextPage = youTube.libraryContinuation(continuation).getOrThrow()
-            nextPage.items
+            libraryPage.items
                 .filterIsInstance<io.github.piper_plumber.spotube_plugin_youtube_music.core.innertube.models.PlaylistItem>()
-                .forEach { savedIds.add(it.id) }
-            continuation = nextPage.continuation
-            requestCount++
-        }
+                .forEach { set.add(it.id) }
+
+            var continuation = libraryPage.continuation
+            var requestCount = 0
+            while (continuation != null && requestCount < 10) {
+                val nextPage = youTube.libraryContinuation(continuation).getOrThrow()
+                nextPage.items
+                    .filterIsInstance<io.github.piper_plumber.spotube_plugin_youtube_music.core.innertube.models.PlaylistItem>()
+                    .forEach { set.add(it.id) }
+                continuation = nextPage.continuation
+                requestCount++
+            }
+            set
+        }.getOrElse { return ids.map { false } }
 
         return ids.map { it in savedIds }
     }
 
     override suspend fun savePlaylists(ids: List<String>) {
         ids.forEach { id ->
-            youTube.likePlaylist(id, true).getOrThrow()
+            runCatching { youTube.likePlaylist(id, true).getOrThrow() }
         }
     }
 
     override suspend fun removeSavedPlaylists(ids: List<String>) {
         ids.forEach { id ->
-            youTube.likePlaylist(id, false).getOrThrow()
+            runCatching { youTube.likePlaylist(id, false).getOrThrow() }
         }
     }
 
