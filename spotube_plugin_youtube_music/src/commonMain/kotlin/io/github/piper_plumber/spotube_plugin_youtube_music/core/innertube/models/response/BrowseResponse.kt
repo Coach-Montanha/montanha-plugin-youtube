@@ -17,13 +17,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BrowseResponse(
-    val contents: Contents?,
-    val continuationContents: ContinuationContents?,
-    val onResponseReceivedActions: List<ResponseAction>?,
-    val header: Header?,
-    val microformat: Microformat?,
-    val responseContext: ResponseContext,
-    val background: ThumbnailRenderer?
+    val contents: Contents? = null,
+    val continuationContents: ContinuationContents? = null,
+    val onResponseReceivedActions: List<ResponseAction>? = null,
+    val header: Header? = null,
+    val microformat: Microformat? = null,
+    val responseContext: ResponseContext? = null,
+    val background: ThumbnailRenderer? = null
 ) {
     @Serializable
     data class Contents(
@@ -88,14 +88,14 @@ data class BrowseResponse(
     ) {
         @Serializable
         data class MusicImmersiveHeaderRenderer(
-            val title: Runs,
-            val description: Runs?,
-            val thumbnail: ThumbnailRenderer?,
-            val playButton: Button?,
-            val startRadioButton: Button?,
-            val subscriptionButton: SubscriptionButton?,
-            val menu: Menu,
-            val subscriptionButton2: SubscriptionButton2?,
+            val title: Runs? = null,
+            val description: Runs? = null,
+            val thumbnail: ThumbnailRenderer? = null,
+            val playButton: Button? = null,
+            val startRadioButton: Button? = null,
+            val subscriptionButton: SubscriptionButton? = null,
+            val menu: Menu? = null,
+            val subscriptionButton2: SubscriptionButton2? = null,
             val monthlyListenerCount: Runs? = null,
         ) {
             @Serializable
@@ -111,10 +111,10 @@ data class BrowseResponse(
 
         @Serializable
         data class MusicVisualHeaderRenderer(
-            val title: Runs,
-            val foregroundThumbnail: ThumbnailRenderer,
-            val thumbnail: ThumbnailRenderer?,
-            val subscriptionButton: SubscriptionButton?,
+            val title: Runs? = null,
+            val foregroundThumbnail: ThumbnailRenderer? = null,
+            val thumbnail: ThumbnailRenderer? = null,
+            val subscriptionButton: SubscriptionButton? = null,
         )
 
         @Serializable
